@@ -77,8 +77,14 @@ func (h *MultiHunkReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		return nil, err
 	}
 
+	count := 0
 	var mb = make(buf.MultiBuffer, 0, len(h.buf))
 	for _, b := range h.buf {
+		if len(b) == 0 {
+			continue
+		}
+
+		count++
 		if cap(b) >= buf.Size {
 			mb = append(mb, buf.NewExisted(b))
 			continue
@@ -90,7 +96,7 @@ func (h *MultiHunkReaderWriter) ReadMultiBuffer() (buf.MultiBuffer, error) {
 
 		mb = append(mb, nb)
 	}
-	return mb, nil
+	return mb[:count], nil
 }
 
 func (h *MultiHunkReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
@@ -99,12 +105,17 @@ func (h *MultiHunkReaderWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 		return io.ErrClosedPipe
 	}
 
-	hunk := &MultiHunk{Data: make([][]byte, len(mb))}
+	count := 0
+	hunks := make([][]byte, len(mb))
+
 	for _, b := range mb {
-		hunk.Data = append(hunk.Data, b.Bytes())
+		if b.Len() > 0 {
+			hunks = append(hunks, b.Bytes())
+			count++
+		}
 	}
 
-	err := h.hc.Send(hunk)
+	err := h.hc.Send(&MultiHunk{Data: hunks[:count]})
 	if err != nil {
 		return err
 	}
