@@ -7,10 +7,7 @@ import (
 	"os"
 	"time"
 
-<<<<<<< HEAD
-=======
 	"github.com/xtls/xray-core/app/router"
->>>>>>> origin/main
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/outbound"
